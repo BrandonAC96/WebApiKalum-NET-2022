@@ -9,9 +9,9 @@ namespace WebApiKalum.Entities
         public string Descripcion { get; set; }
         public DateTime FechaCargo { get; set; }
         public DateTime FechaAplica { get; set; }
-        public double Monto { get; set; }
-        public double Mora { get; set; }
-        public double Descuento { get; set; }
+        public Decimal Monto { get; set; }
+        public Decimal Mora { get; set; }
+        public Decimal Descuento { get; set; }
         public virtual Cargo Cargo { get; set; }
         public virtual Alumno Alumno { get; set; }
     }
