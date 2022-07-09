@@ -37,7 +37,7 @@ public class CargoController : ControllerBase
         public async Task<ActionResult<Cargo>> GetCargo(string id)
         {
             Logger.LogDebug("Iniciando proceso de bùsqueda con el id " + id);
-            var cargos = await DbContext.Cargo.Include(c => c.CuentasXCobrar).FirstOrDefaultAsync(ct => ct.CargoId == id);
+            var cargos = await DbContext.Cargo.FirstOrDefaultAsync(ct => ct.CargoId == id);
             if (cargos == null)
             {
                 Logger.LogWarning("No existe Cargo con el id " + id);
@@ -45,6 +45,54 @@ public class CargoController : ControllerBase
             }
             Logger.LogInformation("Finalizando el proceso de búsqueda de forma exitosa");
             return Ok(cargos);
+        }
+        [HttpPost]
+        public async Task<ActionResult<Cargo>> Post([FromBody] Cargo value)
+        {
+            Logger.LogDebug("Iniciando el proceso de agregar nuevo Cargo");
+            value.CargoId = Guid.NewGuid().ToString().ToUpper();
+            await DbContext.Cargo.AddAsync(value);
+            await DbContext.SaveChangesAsync();
+            Logger.LogInformation("Finalizando proceso de crear nuevo Cargo");
+            return new CreatedAtRouteResult("GetCargo",new {id = value.CargoId}, value);
+        }
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Cargo>> Delete(string id)
+        {
+            Logger.LogDebug("Iniciando proceso de Eliminación");
+            Cargo cargo = await DbContext.Cargo.FirstOrDefaultAsync(ct => ct.CargoId == id);
+            if(cargo == null)
+            {
+                Logger.LogWarning($"No se encontró ningun Cargo con el Id {id}");
+                return NotFound();
+            }
+            else
+            {
+                DbContext.Cargo.Remove(cargo);
+                await DbContext.SaveChangesAsync();
+                Logger.LogInformation($"Se elimino el Cargo con id {id}");
+                return cargo;
+            }
+        }
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Put(string id, [FromBody] Cargo value)
+        {
+            Logger.LogDebug($"Iniciando el proceso de actualización del Cargo con el id{id}");
+            Cargo cargo = await DbContext.Cargo.FirstOrDefaultAsync(ct => ct.CargoId == id);
+            if(cargo == null)
+            {
+                Logger.LogWarning($"No existe Cargo con el Id {id}");
+                return BadRequest();
+            }
+            cargo.Descripcion = value.Descripcion;
+            cargo.Prefijo = value.Prefijo;
+            cargo.Monto = value.Monto;
+            cargo.GeneraMora = value.GeneraMora;
+            cargo.PorcentajeMora = value.PorcentajeMora;
+            DbContext.Entry(cargo).State = EntityState.Modified;
+            await DbContext.SaveChangesAsync();
+            Logger.LogInformation("Los datos han sido actualizados correctamente.");
+            return NoContent();
         }
     }
 }

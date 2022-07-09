@@ -6,7 +6,7 @@ namespace WebApiKalum.Entities
         public string CarreraId { get; set; }
         public string MontoInscripcion { get; set; }
         public string NumeroPagos { get; set; }
-        public decimal MontoPago { get; set; }
+        public Decimal MontoPago { get; set; }
 
         public virtual CarreraTecnica CarreraTecnica { get; set; }
     }

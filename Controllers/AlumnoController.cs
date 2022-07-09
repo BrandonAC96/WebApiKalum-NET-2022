@@ -37,7 +37,7 @@ namespace WebApiKalum.Controllers
         public async Task<ActionResult<Alumno>> GetAlumno(string id)
         {
             Logger.LogDebug("Iniciando proceso de bùsqueda con el id " + id);
-            var alumnos = await DbContext.Alumno.Include(c => c.CuentasXCobrar).Include(c => c.Inscripciones).FirstOrDefaultAsync(ct => ct.Carne == id);
+            var alumnos = await DbContext.Alumno.FirstOrDefaultAsync(ct => ct.Carne == id);
             if (alumnos == null)
             {
                 Logger.LogWarning("No existe Alumno con el id " + id);
@@ -45,6 +45,49 @@ namespace WebApiKalum.Controllers
             }
             Logger.LogInformation("Finalizando el proceso de búsqueda de forma exitosa");
             return Ok(alumnos);
+        }
+        [HttpPost]
+        public async Task<ActionResult<Alumno>> Post([FromBody] Alumno value)
+        {
+            Logger.LogDebug("Iniciando el proceso de agregar nuevo Alumno");
+            await DbContext.Alumno.AddAsync(value);
+            await DbContext.SaveChangesAsync();
+            Logger.LogInformation("Finalizando proceso de crear nuevo Alumno");
+            return new CreatedAtRouteResult("GetAlumno",new {id = value.Carne}, value);
+        }
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Alumno>> Delete(string id)
+        {
+            Logger.LogDebug("Iniciando proceso de Eliminación");
+            Alumno alumno = await DbContext.Alumno.FirstOrDefaultAsync(ct => ct.Carne == id);
+            if(alumno == null)
+            {
+                Logger.LogWarning($"No se encontró ningún Alumno con el Id {id}");
+                return NotFound();
+            }
+            else
+            {
+                DbContext.Alumno.Remove(alumno);
+                await DbContext.SaveChangesAsync();
+                Logger.LogInformation($"Se elimino el alumno con id {id}");
+                return alumno;
+            }
+        }
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Put(string id, [FromBody] Alumno value)
+        {
+            Logger.LogDebug($"Iniciando el proceso de actualización de un alumno con el id{id}");
+            Alumno alumno = await DbContext.Alumno.FirstOrDefaultAsync(ct => ct.Carne == id);
+            if(alumno == null)
+            {
+                Logger.LogWarning($"No existe el Alumno con el Id {id}");
+                return BadRequest();
+            }
+            alumno.Nombres = value.Nombres;
+            DbContext.Entry(alumno).State = EntityState.Modified;
+            await DbContext.SaveChangesAsync();
+            Logger.LogInformation("Los datos han sido actualizados correctamente.");
+            return NoContent();
         }
     }
 }
